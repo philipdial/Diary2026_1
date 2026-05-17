@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1A1614">
+<title>2026 Diary</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --cream:#F5F0E8;--warm:#FDFAF5;--ink:#1A1614;--ink2:#4A4542;--ink3:#9A948E;
+  --sage:#7A9E7E;--sage2:#B8D4BB;--sage3:#E8F2E9;
+  --done-bg:#EAF7EB;--done-border:#A8D8AC;--done-text:#2D6B31;--done-sub:#4A9450;
+  --rust:#C4622D;--rustl:#F0D4C4;--border:#DDD8CE;--cloud:#3B7DD8;
+  --sidebar-w:200px;--panel-w:300px;
+}
+html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);}
+
+/* ═══ SETUP ═══ */
+#setupScreen{position:fixed;inset:0;z-index:300;background:var(--cream);display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto;}
+.setup-box{background:var(--warm);border:1px solid var(--border);border-radius:10px;padding:24px;width:100%;max-width:500px;display:flex;flex-direction:column;gap:16px;}
+.setup-title{font-family:'Playfair Display',serif;font-size:22px;}
+.setup-sub{font-size:13px;color:var(--ink3);line-height:1.7;}
+.setup-step{background:var(--cream);border:1px solid var(--border);border-radius:6px;padding:11px 13px;font-size:13px;color:var(--ink2);line-height:1.6;}
+.setup-step strong{color:var(--ink);font-weight:500;}
+.setup-step a{color:var(--cloud);text-decoration:none;}
+.step-num{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:var(--ink);color:var(--warm);font-size:10px;font-weight:500;margin-right:5px;}
+.config-ta{width:100%;height:120px;padding:10px 12px;font-family:monospace;font-size:12px;border:1.5px solid var(--border);border-radius:4px;background:var(--cream);color:var(--ink);resize:none;outline:none;line-height:1.6;}
+.config-ta:focus{border-color:var(--cloud);}
+.setup-btn{padding:13px;background:var(--ink);color:var(--warm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;border:none;border-radius:4px;cursor:pointer;}
+.setup-btn:hover{background:var(--cloud);}
+.setup-err{font-size:12px;color:var(--rust);display:none;}
+
+/* ═══ LOGIN ═══ */
+#loginScreen{position:fixed;inset:0;z-index:200;background:var(--cream);display:flex;align-items:center;justify-content:center;padding:24px;}
+.lw{text-align:center;max-width:340px;width:100%;}
+.lbg{font-family:'Playfair Display',serif;font-size:clamp(60px,20vw,100px);font-weight:600;color:var(--ink);line-height:1;letter-spacing:-4px;opacity:.06;margin-bottom:-20px;}
+.lt{font-family:'Playfair Display',serif;font-size:clamp(26px,7vw,34px);font-weight:400;margin-bottom:6px;}
+.ls{font-size:13px;color:var(--ink3);margin-bottom:28px;}
+.li{width:100%;padding:14px 16px;font-family:'DM Sans',sans-serif;font-size:16px;background:var(--warm);border:1.5px solid var(--border);border-radius:6px;color:var(--ink);margin-bottom:10px;outline:none;}
+.li:focus{border-color:var(--sage);}
+.lb{width:100%;padding:14px;background:var(--ink);color:var(--warm);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;border:none;border-radius:6px;cursor:pointer;}
+.lb:active{opacity:.85;}
+
+/* ═══ APP SHELL ═══ */
+#app{display:flex;height:100%;overflow:hidden;}
+
+/* ═══ SIDEBAR (desktop) ═══ */
+.sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--ink);color:var(--warm);display:flex;flex-direction:column;overflow:hidden;transition:transform .25s ease;}
+.sb-top{padding:18px 16px 12px;border-bottom:1px solid rgba(255,255,255,.08);}
+.sb-logo{font-family:'Playfair Display',serif;font-size:18px;font-style:italic;}
+.sb-sub{font-size:10px;letter-spacing:.14em;color:rgba(255,255,255,.3);text-transform:uppercase;margin-top:2px;}
+.sb-cloud{display:flex;align-items:center;gap:5px;margin-top:5px;font-size:10px;color:rgba(255,255,255,.35);}
+.cloud-dot{width:6px;height:6px;border-radius:50%;background:#666;transition:background .3s;}
+.cloud-dot.online{background:#6ECB74;}.cloud-dot.offline{background:#E07070;}
+.sb-user{padding:9px 16px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:7px;}
+.sb-dot{width:26px;height:26px;border-radius:50%;background:var(--sage);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;flex-shrink:0;}
+.sb-name{font-size:12px;color:rgba(255,255,255,.85);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.sb-switch{font-size:10px;color:rgba(255,255,255,.25);background:none;border:none;cursor:pointer;text-transform:uppercase;padding:4px;}
+.sb-switch:hover{color:rgba(255,255,255,.6);}
+.months-list{flex:1;overflow-y:auto;padding:4px 0;scrollbar-width:none;}
+.months-list::-webkit-scrollbar{display:none;}
+.mi{padding:7px 16px;font-size:13px;color:rgba(255,255,255,.42);cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:all .15s;border-left:2px solid transparent;}
+.mi:hover,.mi:active{color:rgba(255,255,255,.8);background:rgba(255,255,255,.04);}
+.mi.active{color:var(--warm);border-left-color:var(--sage);background:rgba(255,255,255,.05);}
+.mc{font-size:10px;color:var(--sage);background:rgba(122,158,126,.2);border-radius:10px;padding:1px 6px;}
+.mc.z{color:rgba(255,255,255,.18);background:transparent;}
+.sb-bottom{padding:8px 10px;border-top:1px solid rgba(255,255,255,.08);}
+.reset-btn{width:100%;padding:6px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;border-radius:3px;cursor:pointer;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:rgba(255,255,255,.3);font-family:'DM Sans',sans-serif;}
+.reset-btn:hover{color:rgba(255,255,255,.65);}
+
+/* ═══ CALENDAR ═══ */
+.cal-main{flex:1;overflow-y:auto;padding:18px 20px;background:var(--warm);scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+.mb{margin-bottom:32px;}
+.mh{font-family:'Playfair Display',serif;font-size:19px;font-weight:400;color:var(--ink);margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border);display:flex;align-items:baseline;gap:8px;}
+.mh-tag{font-family:'DM Sans',sans-serif;font-size:10px;color:var(--ink3);letter-spacing:.1em;text-transform:uppercase;}
+.dl{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:2px;}
+.dlab{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);text-align:center;padding:3px 0;}
+.dg{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+.dc{aspect-ratio:1;min-height:32px;border-radius:3px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:transparent;border:1px solid transparent;transition:all .12s;position:relative;touch-action:manipulation;}
+.dc:hover,.dc:active{background:var(--cream);border-color:var(--border);}
+.dc.he{background:var(--sage3);}.dc.he:hover{background:#d5ecd6;}
+.dc.all-done{background:#C6EDCA!important;border-color:#8ECB94!important;}
+.dc.all-done:hover{background:#B2E4B8!important;}
+.dc.sel{background:var(--ink)!important;border-color:var(--ink)!important;}
+.dc.tod{border-color:var(--sage);}
+.dc.emp{cursor:default;pointer-events:none;}
+.dn{font-size:11px;color:var(--ink2);line-height:1;}
+.dc.sel .dn{color:var(--warm);}
+.dc.tod .dn{color:var(--sage);font-weight:500;}
+.dc.sel.tod .dn{color:var(--warm);}
+.dc.all-done .dn{color:var(--done-text);font-weight:500;}
+.dc.sel.all-done .dn{color:var(--warm);}
+.ep{width:3px;height:3px;border-radius:50%;background:var(--sage);}
+.dc.sel .ep{background:var(--sage2);}
+.dc.all-done .ep{background:var(--done-sub);}
+.dc.all-done::after{content:'✓';position:absolute;top:2px;right:3px;font-size:7px;color:var(--done-sub);font-weight:700;}
+.dc.sel.all-done::after{color:rgba(255,255,255,.5);}
+
+/* ═══ ENTRY PANEL (desktop) ═══ */
+.entry-panel{width:var(--panel-w);flex-shrink:0;background:var(--cream);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+.ph{padding:16px 16px 12px;border-bottom:1px solid var(--border);background:var(--warm);}
+.ph-big{font-family:'Playfair Display',serif;font-size:22px;font-weight:400;color:var(--ink);line-height:1.1;}
+.ph-day{font-size:11px;color:var(--ink3);margin-top:3px;}
+.ph-empty{font-family:'Playfair Display',serif;font-size:16px;font-style:italic;color:var(--ink3);}
+.es{flex:1;overflow-y:auto;padding:12px;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+.nem{font-size:13px;color:var(--ink3);font-style:italic;text-align:center;padding:24px 0;}
+.ec{border:1px solid var(--border);border-radius:5px;padding:10px 12px;margin-bottom:8px;transition:background .2s,border-color .2s;background:var(--warm);}
+.ec.done{background:var(--done-bg);border-color:var(--done-border);}
+.ect{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;gap:6px;}
+.eap{font-size:11px;font-weight:500;color:var(--sage);display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
+.ec.done .eap{color:var(--done-sub);}
+.done-badge{font-size:10px;background:var(--done-sub);color:#fff;border-radius:10px;padding:1px 6px;font-weight:500;}
+.etm{font-size:10px;color:var(--ink3);white-space:nowrap;flex-shrink:0;}
+.etx{font-size:13px;color:var(--ink2);line-height:1.7;white-space:pre-wrap;word-break:break-word;}
+.ec.done .etx{color:var(--done-text);}
+.eca{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap;}
+.ab{font-size:11px;padding:5px 9px;border-radius:3px;border:1px solid var(--border);background:transparent;color:var(--ink3);cursor:pointer;font-family:'DM Sans',sans-serif;touch-action:manipulation;white-space:nowrap;}
+.ab:active{opacity:.7;}
+.ab.done-btn{border-color:var(--sage2);color:var(--sage);}
+.ab.done-btn:active{background:var(--sage3);}
+.ab.undone-btn{border-color:var(--done-border);color:var(--done-sub);background:rgba(255,255,255,.5);}
+.add-btn{width:100%;padding:9px;background:transparent;border:1px dashed var(--border);border-radius:4px;color:var(--ink3);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:3px;touch-action:manipulation;}
+.add-btn:active{background:var(--sage3);}
+
+.wa{padding:12px 14px;border-top:1px solid var(--border);background:var(--warm);display:none;flex-direction:column;gap:8px;}
+.wl{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--ink3);}
+.wl.ed{color:var(--rust);}
+.wta{width:100%;min-height:80px;padding:10px 11px;font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.7;color:var(--ink);background:var(--cream);border:1px solid var(--border);border-radius:4px;resize:none;outline:none;}
+.wta:focus{border-color:var(--sage);background:var(--warm);}
+.wf{display:flex;gap:7px;justify-content:flex-end;}
+.bs{padding:10px 16px;background:var(--ink);color:var(--warm);border:none;border-radius:4px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;touch-action:manipulation;}
+.bs:active{opacity:.8;}
+.bc{padding:10px 12px;background:transparent;color:var(--ink3);border:1px solid var(--border);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;touch-action:manipulation;}
+
+.sp{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:6px;}
+.sp-i{font-size:22px;opacity:.25;margin-bottom:4px;}
+.sp-t{font-family:'Playfair Display',serif;font-size:14px;font-style:italic;color:var(--ink3);text-align:center;}
+
+/* ═══ MOBILE NAV BAR ═══ */
+.mobile-nav{display:none;height:54px;background:var(--ink);flex-shrink:0;align-items:center;justify-content:space-around;border-top:1px solid rgba(255,255,255,.08);z-index:10;}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;color:rgba(255,255,255,.45);cursor:pointer;padding:8px 4px;font-family:'DM Sans',sans-serif;touch-action:manipulation;}
+.nav-btn.active{color:var(--sage);}
+.nav-btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.nav-label{font-size:9px;letter-spacing:.05em;text-transform:uppercase;}
+
+/* ═══ MOBILE OVERLAY PANELS ═══ */
+.mobile-panel{display:none;position:fixed;inset:0;z-index:100;background:var(--ink);flex-direction:column;overflow:hidden;}
+.mobile-panel.open{display:flex;}
+.mobile-panel-header{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:space-between;}
+.mobile-panel-title{font-family:'Playfair Display',serif;font-size:18px;font-style:italic;color:var(--warm);}
+.close-btn{background:none;border:none;color:rgba(255,255,255,.5);font-size:22px;cursor:pointer;padding:4px;line-height:1;}
+
+/* Mobile entry panel */
+.mobile-entry{display:none;position:fixed;inset:0;z-index:100;background:var(--cream);flex-direction:column;overflow:hidden;}
+.mobile-entry.open{display:flex;}
+.mep-header{padding:14px 16px 12px;border-bottom:1px solid var(--border);background:var(--warm);display:flex;align-items:center;gap:12px;}
+.mep-back{background:none;border:none;color:var(--ink3);font-size:22px;cursor:pointer;padding:0;line-height:1;touch-action:manipulation;}
+.mep-title{flex:1;}
+.mep-big{font-family:'Playfair Display',serif;font-size:20px;font-weight:400;}
+.mep-sub{font-size:11px;color:var(--ink3);margin-top:2px;}
+
+/* ═══ TOAST ═══ */
+.toast{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--warm);font-size:12px;padding:9px 18px;border-radius:20px;opacity:0;pointer-events:none;transition:opacity .25s;z-index:500;white-space:nowrap;}
+.toast.show{opacity:1;}
+
+/* ═══ SYNC SPINNER ═══ */
+.sync-indicator{display:inline-block;width:8px;height:8px;border:1.5px solid rgba(255,255,255,.2);border-top-color:var(--sage);border-radius:50%;animation:spin .7s linear infinite;margin-left:4px;vertical-align:middle;opacity:0;transition:opacity .2s;}
+.sync-indicator.active{opacity:1;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ═══ RESPONSIVE ═══ */
+@media (max-width: 700px) {
+  .sidebar{display:none;}
+  .entry-panel{display:none;}
+  .mobile-nav{display:flex;}
+  .toast{bottom:64px;}
+  #app{flex-direction:column;}
+  .cal-main{padding:12px 10px;}
+  .dg{gap:1px;}.dl{gap:1px;}
+  .dc{min-height:38px;}
+  .dn{font-size:12px;}
+}
+@media (min-width:701px) and (max-width:960px) {
+  :root{--sidebar-w:160px;--panel-w:260px;}
+  .mi{font-size:12px;padding:7px 12px;}
+}
+</style>
+</head>
+<body>
+
+<!-- SETUP -->
+<div id="setupScreen">
+  <div class="setup-box">
+    <div class="setup-title">☁ Connect to the cloud</div>
+    <div class="setup-sub">This diary uses <strong>Firebase</strong> (free) for live sync across all phones and computers. Do this once, then share the link with everyone.</div>
+    <div class="setup-step"><span class="step-num">1</span>Go to <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> → <strong>Add project</strong> → name it (e.g. "diary2026") → disable Analytics → Create.</div>
+    <div class="setup-step"><span class="step-num">2</span>In left menu: <strong>Build → Realtime Database → Create database</strong> → choose region → <strong>Start in test mode</strong> → Enable.</div>
+    <div class="setup-step"><span class="step-num">3</span><strong>Project Settings</strong> (gear icon) → scroll to "Your apps" → click <strong>&lt;/&gt; Web</strong> → register app → copy the <strong>firebaseConfig</strong> object → paste below.</div>
+    <textarea class="config-ta" id="configTA" placeholder='Paste your firebaseConfig here:
+{
+  apiKey: "AIza...",
+  authDomain: "your-app.firebaseapp.com",
+  databaseURL: "https://your-app-default-rtdb.firebaseio.com",
+  projectId: "your-app",
+  ...
+}'></textarea>
+    <div class="setup-err" id="setupErr"></div>
+    <button class="setup-btn" onclick="connectFirebase()">Connect &amp; open diary →</button>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div id="loginScreen" style="display:none;">
+  <div class="lw">
+    <div class="lbg">2026</div>
+    <div class="lt">Your Diary</div>
+    <div class="ls">Shared · real-time · all devices</div>
+    <input class="li" type="text" id="nameInput" placeholder="Enter your name…" maxlength="30" autocomplete="off"/>
+    <button class="lb" onclick="doLogin()">Open diary →</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none;">
+
+  <!-- SIDEBAR (desktop) -->
+  <div class="sidebar">
+    <div class="sb-top">
+      <div class="sb-logo">diary</div>
+      <div class="sb-sub">2026 · Cloud sync</div>
+      <div class="sb-cloud">
+        <div class="cloud-dot" id="cloudDot"></div>
+        <span id="cloudLabel">Connecting…</span>
+        <span class="sync-indicator" id="syncSpinner"></span>
+      </div>
+    </div>
+    <div class="sb-user">
+      <div class="sb-dot" id="userDot">—</div>
+      <span class="sb-name" id="userLabel">—</span>
+      <button class="sb-switch" onclick="doLogout()">switch</button>
+    </div>
+    <div class="months-list" id="monthsList"></div>
+    <div class="sb-bottom">
+      <button class="reset-btn" onclick="resetConfig()">⚙ Change Firebase config</button>
+    </div>
+  </div>
+
+  <!-- CALENDAR (always visible) -->
+  <div class="cal-main" id="calMain"></div>
+
+  <!-- ENTRY PANEL (desktop) -->
+  <div class="entry-panel" id="entryPanel">
+    <div class="ph" id="panelHeader"><div class="ph-empty">Select a day</div></div>
+    <div id="panelContent" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+      <div class="sp"><div class="sp-i">✦</div><div class="sp-t">Choose a day to read or write</div></div>
+    </div>
+    <div class="wa" id="writeArea">
+      <div class="wl" id="writeLabel">New entry</div>
+      <textarea class="wta" id="entryTA" placeholder="Write what happened today…" rows="4"></textarea>
+      <div class="wf">
+        <button class="bc" onclick="cancelEdit()">Cancel</button>
+        <button class="bs" onclick="saveEntry()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MOBILE NAV -->
+  <div class="mobile-nav">
+    <button class="nav-btn active" id="navCal" onclick="mobileTab('cal')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span class="nav-label">Calendar</span>
+    </button>
+    <button class="nav-btn" id="navMonths" onclick="mobileTab('months')">
+      <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      <span class="nav-label">Months</span>
+    </button>
+    <button class="nav-btn" id="navUser" onclick="mobileTab('user')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      <span class="nav-label">Account</span>
+    </button>
+  </div>
+</div>
+
+<!-- MOBILE: Months panel -->
+<div class="mobile-panel" id="mobileMonths">
+  <div class="mobile-panel-header">
+    <span class="mobile-panel-title">Months</span>
+    <button class="close-btn" onclick="closeMobilePanel('mobileMonths')">×</button>
+  </div>
+  <div class="months-list" id="monthsListMobile" style="background:var(--ink);"></div>
+</div>
+
+<!-- MOBILE: User panel -->
+<div class="mobile-panel" id="mobileUser">
+  <div class="mobile-panel-header">
+    <span class="mobile-panel-title">Account</span>
+    <button class="close-btn" onclick="closeMobilePanel('mobileUser')">×</button>
+  </div>
+  <div style="padding:20px;display:flex;flex-direction:column;gap:14px;">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div class="sb-dot" id="mUserDot" style="width:40px;height:40px;font-size:15px;">—</div>
+      <div>
+        <div style="color:var(--warm);font-size:15px;font-weight:500;" id="mUserName">—</div>
+        <div style="color:rgba(255,255,255,.4);font-size:12px;">Diary member</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;padding:10px 0;border-top:1px solid rgba(255,255,255,.08);">
+      <div class="cloud-dot" id="mCloudDot"></div>
+      <span style="font-size:12px;color:rgba(255,255,255,.5);" id="mCloudLabel">Connecting…</span>
+    </div>
+    <button onclick="doLogout()" style="padding:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:4px;color:rgba(255,255,255,.6);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;">Switch user</button>
+    <button onclick="resetConfig()" style="padding:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:4px;color:rgba(255,255,255,.35);font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;">⚙ Change Firebase config</button>
+  </div>
+</div>
+
+<!-- MOBILE: Entry panel (full screen) -->
+<div class="mobile-entry" id="mobileEntry">
+  <div class="mep-header">
+    <button class="mep-back" onclick="closeMobileEntry()">‹</button>
+    <div class="mep-title">
+      <div class="mep-big" id="mepDate">—</div>
+      <div class="mep-sub" id="mepSub">—</div>
+    </div>
+  </div>
+  <div id="mepContent" style="flex:1;overflow-y:auto;padding:12px;"></div>
+  <div class="wa" id="mepWriteArea" style="background:var(--warm);border-top:1px solid var(--border);">
+    <div class="wl" id="mepWriteLabel">New entry</div>
+    <textarea class="wta" id="mepEntryTA" placeholder="Write what happened today…" rows="4"></textarea>
+    <div class="wf">
+      <button class="bc" onclick="cancelMepEdit()">Cancel</button>
+      <button class="bs" onclick="saveMepEntry()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script>
+var MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+var DNAMES=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+var CONFIG_KEY='diary2026_fbconfig';
+var USER_KEY='diary2026_user';
+
+var currentUser=null,selectedDate=null,allEntries={},editingInfo=null,mepEditingInfo=null,db=null,dbRef=null;
+
+/* ─── FIREBASE SETUP ─── */
+function connectFirebase(){
+  var raw=document.getElementById('configTA').value.trim();
+  var err=document.getElementById('setupErr');
+  err.style.display='none';
+  var config;
+  try{
+    var cleaned=raw.replace(/^[\s\S]*?\{/,'{').replace(/\}[\s\S]*$/,'}');
+    var json=cleaned.replace(/([{,]\s*)([a-zA-Z_]\w*)(\s*:)/g,'$1"$2"$3').replace(/:\s*'([^']*)'/g,':"$1"');
+    config=JSON.parse(json);
+  }catch(e){try{config=JSON.parse(raw);}catch(e2){err.textContent='Could not parse config. Paste the full firebaseConfig object.';err.style.display='block';return;}}
+  if(!config.databaseURL){err.textContent='Missing databaseURL. Make sure Realtime Database is enabled.';err.style.display='block';return;}
+  try{
+    if(firebase.apps.length)firebase.app().delete();
+    firebase.initializeApp(config);
+    db=firebase.database();dbRef=db.ref('diary2026');
+    dbRef.child('__ping__').set({t:Date.now()}).then(function(){
+      dbRef.child('__ping__').remove();
+      localStorage.setItem(CONFIG_KEY,JSON.stringify(config));
+      document.getElementById('setupScreen').style.display='none';
+      checkLogin();
+    }).catch(function(e){err.textContent='Connection failed: '+e.message;err.style.display='block';});
+  }catch(e){err.textContent='Error: '+e.message;err.style.display='block';}
+}
+
+window.addEventListener('load',function(){
+  var saved=localStorage.getItem(CONFIG_KEY);
+  if(saved){
+    try{
+      var config=JSON.parse(saved);
+      if(firebase.apps.length)firebase.app().delete();
+      firebase.initializeApp(config);
+      db=firebase.database();dbRef=db.ref('diary2026');
+      document.getElementById('setupScreen').style.display='none';
+      checkLogin();
+    }catch(e){}
+  }
+});
+
+function checkLogin(){
+  var u=localStorage.getItem(USER_KEY);
+  if(u){
+    currentUser=u;
+    setUserUI(u);
+    document.getElementById('app').style.display='flex';
+    initSync();
+  }else{
+    document.getElementById('loginScreen').style.display='flex';
+  }
+}
+
+function resetConfig(){localStorage.removeItem(CONFIG_KEY);location.reload();}
+
+/* ─── SYNC ─── */
+function initSync(){
+  setCloudStatus('connecting');
+  dbRef.child('entries').on('value',function(snap){
+    allEntries=snap.val()||{};
+    setCloudStatus('online');
+    render();
+    if(selectedDate)renderPanel(selectedDate.m,selectedDate.d);
+    if(isMobile()&&document.getElementById('mobileEntry').classList.contains('open')&&selectedDate)renderMepContent(selectedDate.m,selectedDate.d);
+  },function(){setCloudStatus('offline');});
+  db.ref('.info/connected').on('value',function(s){setCloudStatus(s.val()?'online':'offline');});
+}
+
+function setCloudStatus(s){
+  var dot=document.getElementById('cloudDot'),lbl=document.getElementById('cloudLabel');
+  var mdot=document.getElementById('mCloudDot'),mlbl=document.getElementById('mCloudLabel');
+  [dot,mdot].forEach(function(d){d.className='cloud-dot'+(s==='online'?' online':s==='offline'?' offline':'');});
+  var t=s==='online'?'Live sync on':s==='offline'?'Offline':'Connecting…';
+  lbl.textContent=t;mlbl.textContent=t;
+}
+function setSyncing(on){document.getElementById('syncSpinner').className='sync-indicator'+(on?' active':'');}
+
+/* ─── LOGIN ─── */
+function setUserUI(n){
+  document.getElementById('userLabel').textContent=n;
+  document.getElementById('userDot').textContent=n.slice(0,2).toUpperCase();
+  document.getElementById('mUserName').textContent=n;
+  document.getElementById('mUserDot').textContent=n.slice(0,2).toUpperCase();
+}
+function doLogin(){
+  var n=document.getElementById('nameInput').value.trim();
+  if(!n){document.getElementById('nameInput').focus();return;}
+  currentUser=n;localStorage.setItem(USER_KEY,n);
+  setUserUI(n);
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('app').style.display='flex';
+  initSync();
+}
+function doLogout(){
+  currentUser=null;localStorage.removeItem(USER_KEY);selectedDate=null;editingInfo=null;
+  if(dbRef)dbRef.child('entries').off();
+  closeMobilePanel('mobileMonths');closeMobilePanel('mobileUser');closeMobileEntry();
+  document.getElementById('app').style.display='none';
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('nameInput').value='';
+}
+document.addEventListener('keydown',function(e){if(e.key==='Enter'&&document.getElementById('loginScreen').style.display!=='none')doLogin();});
+
+/* ─── HELPERS ─── */
+function daysIn(m){return new Date(2026,m+1,0).getDate();}
+function firstDay(m){return new Date(2026,m,1).getDay();}
+function dk(m,d){return '2026_'+String(m+1).padStart(2,'0')+'_'+String(d).padStart(2,'0');}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function isMobile(){return window.innerWidth<=700;}
+function getEntries(m,d){var raw=allEntries[dk(m,d)];if(!raw)return[];return Array.isArray(raw)?raw:Object.values(raw);}
+function countMonth(m){var c=0;for(var d=1;d<=daysIn(m);d++)if(getEntries(m,d).length)c++;return c;}
+function isDayAllDone(m,d){var e=getEntries(m,d);return e.length>0&&e.every(function(x){return x.done;});}
+
+/* ─── RENDER ─── */
+function render(){buildSidebar();buildCalendar();}
+
+function buildSidebar(){
+  buildMonthList('monthsList',false);
+  buildMonthList('monthsListMobile',true);
+}
+function buildMonthList(elId,isMob){
+  var el=document.getElementById(elId);el.innerHTML='';
+  MONTHS.forEach(function(name,i){
+    var div=document.createElement('div');
+    div.className='mi'+(selectedDate&&selectedDate.m===i?' active':'');
+    var c=countMonth(i);
+    div.innerHTML='<span>'+name+'</span><span class="mc '+(c===0?'z':'')+'>'+(c||'·')+'</span>';
+    div.onclick=(function(idx,mob){return function(){
+      var e=document.getElementById('m'+idx);
+      if(e)e.scrollIntoView({behavior:'smooth',block:'start'});
+      if(mob)closeMobilePanel('mobileMonths');
+    };})(i,isMob);
+    el.appendChild(div);
+  });
+}
+
+function buildCalendar(){
+  var main=document.getElementById('calMain'),sc=main.scrollTop;
+  main.innerHTML='';
+  var now=new Date();
+  MONTHS.forEach(function(name,mi){
+    var block=document.createElement('div');block.className='mb';block.id='m'+mi;
+    block.innerHTML='<div class="mh">'+name+' <span class="mh-tag">2026</span></div>';
+    var dl=document.createElement('div');dl.className='dl';
+    DNAMES.forEach(function(l){dl.innerHTML+='<div class="dlab">'+l+'</div>';});
+    block.appendChild(dl);
+    var dg=document.createElement('div');dg.className='dg';
+    for(var i=0;i<firstDay(mi);i++){var e=document.createElement('div');e.className='dc emp';dg.appendChild(e);}
+    for(var d=1;d<=daysIn(mi);d++){
+      var cell=document.createElement('div');
+      var hasE=getEntries(mi,d).length>0;
+      var allDone=isDayAllDone(mi,d);
+      var isT=now.getFullYear()===2026&&now.getMonth()===mi&&now.getDate()===d;
+      var isSel=selectedDate&&selectedDate.m===mi&&selectedDate.d===d;
+      var cls='dc'+(allDone?' all-done':hasE?' he':'')+(isT?' tod':'')+(isSel?' sel':'');
+      cell.className=cls;
+      cell.innerHTML='<span class="dn">'+d+'</span>'+(hasE?'<span class="ep"></span>':'');
+      cell.onclick=(function(mm,dd){return function(){selectDay(mm,dd);};})(mi,d);
+      dg.appendChild(cell);
+    }
+    block.appendChild(dg);main.appendChild(block);
+  });
+  main.scrollTop=sc;
+}
+
+function selectDay(m,d){
+  selectedDate={m:m,d:d};editingInfo=null;mepEditingInfo=null;
+  if(isMobile()){
+    openMobileEntry(m,d);
+  }else{
+    document.getElementById('writeArea').style.display='none';
+    buildCalendar();buildSidebar();renderPanel(m,d);
+  }
+}
+
+/* ─── DESKTOP PANEL ─── */
+function renderPanel(m,d){
+  var entries=getEntries(m,d);
+  var dateObj=new Date(2026,m,d);
+  var dayName=dateObj.toLocaleDateString('en-GB',{weekday:'long'});
+  var doneCount=entries.filter(function(e){return e.done;}).length;
+  document.getElementById('panelHeader').innerHTML=
+    '<div class="ph-big">'+d+' '+MONTHS[m]+'</div>'+
+    '<div class="ph-day">'+dayName+' · '+entries.length+' entr'+(entries.length===1?'y':'ies')+
+    (doneCount>0?' · <span style="color:var(--done-sub);font-weight:500;">'+doneCount+' done ✓</span>':'')+
+    '</div>';
+  var pc=document.getElementById('panelContent');
+  pc.innerHTML='';pc.style.cssText='flex:1;display:flex;flex-direction:column;overflow:hidden;';
+  var scroll=document.createElement('div');scroll.className='es';
+  renderEntryCards(scroll,entries,m,d,false);
+  pc.appendChild(scroll);
+  var wa=document.getElementById('writeArea');
+  if(editingInfo){
+    wa.style.display='flex';
+    document.getElementById('writeLabel').textContent='Editing entry';
+    document.getElementById('writeLabel').className='wl ed';
+    document.getElementById('entryTA').value=editingInfo.text;
+  }else{wa.style.display='none';document.getElementById('entryTA').value='';}
+}
+
+function renderEntryCards(container,entries,m,d,isMob){
+  if(entries.length===0){container.innerHTML='<div class="nem">No entries yet.<br>Be the first to write today.</div>';}
+  else{
+    entries.forEach(function(entry,idx){
+      var t=new Date(entry.ts);
+      var ts=t.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+' · '+t.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+      var card=document.createElement('div');
+      card.className='ec'+(entry.done?' done':'');
+      var badge=entry.done?'<span class="done-badge">✓ Done</span>':'';
+      card.innerHTML='<div class="ect"><span class="eap">✦ '+esc(entry.author)+' '+badge+'</span><span class="etm">'+ts+'</span></div><div class="etx">'+esc(entry.text)+'</div>';
+      var acts=document.createElement('div');acts.className='eca';
+      if(!entry.done){
+        var db2=document.createElement('button');db2.className='ab done-btn';db2.textContent='✓ Mark as done';
+        db2.onclick=(function(mm,dd,i){return function(){toggleDone(mm,dd,i,true);};})(m,d,idx);
+        acts.appendChild(db2);
+      }else{
+        var ub=document.createElement('button');ub.className='ab undone-btn';ub.textContent='↩ Undone';
+        ub.onclick=(function(mm,dd,i){return function(){toggleDone(mm,dd,i,false);};})(m,d,idx);
+        acts.appendChild(ub);
+      }
+      if(entry.author===currentUser){
+        var eb=document.createElement('button');eb.className='ab';eb.textContent='Edit';
+        eb.onclick=(function(mm,dd,i,txt,mob){return function(){mob?startMepEdit(mm,dd,i,txt):startEdit(mm,dd,i,txt);};})(m,d,idx,entry.text,isMob);
+        var delb=document.createElement('button');delb.className='ab d';delb.textContent='Delete';
+        delb.onclick=(function(mm,dd,i){return function(){deleteEntry(mm,dd,i);};})(m,d,idx);
+        acts.appendChild(eb);acts.appendChild(delb);
+      }
+      card.appendChild(acts);container.appendChild(card);
+    });
+  }
+  var addBtn=document.createElement('button');addBtn.className='add-btn';addBtn.textContent='+ Write an entry for this day';
+  addBtn.onclick=isMob?openMepWrite:openWrite;
+  container.appendChild(addBtn);
+}
+
+function openWrite(){
+  editingInfo=null;
+  document.getElementById('writeArea').style.display='flex';
+  document.getElementById('writeLabel').textContent='New entry';
+  document.getElementById('writeLabel').className='wl';
+  document.getElementById('entryTA').value='';
+  document.getElementById('entryTA').focus();
+}
+function startEdit(m,d,idx,text){
+  editingInfo={m:m,d:d,idx:idx,text:text};
+  document.getElementById('writeArea').style.display='flex';
+  document.getElementById('writeLabel').textContent='Editing entry';
+  document.getElementById('writeLabel').className='wl ed';
+  document.getElementById('entryTA').value=text;
+  document.getElementById('entryTA').focus();
+}
+function cancelEdit(){
+  editingInfo=null;
+  document.getElementById('writeArea').style.display='none';
+  document.getElementById('entryTA').value='';
+  if(selectedDate)renderPanel(selectedDate.m,selectedDate.d);
+}
+function saveEntry(){
+  var text=document.getElementById('entryTA').value.trim();
+  if(!text){document.getElementById('entryTA').focus();return;}
+  if(!selectedDate)return;
+  var m=selectedDate.m,d=selectedDate.d;
+  var entries=getEntries(m,d).slice();
+  if(editingInfo&&editingInfo.m===m&&editingInfo.d===d){
+    entries[editingInfo.idx]=Object.assign({},entries[editingInfo.idx],{text:text,ts:Date.now()});
+  }else{
+    entries.push({author:currentUser,text:text,ts:Date.now(),id:Date.now()+'_'+Math.random(),done:false,doneBy:null,doneAt:null});
+  }
+  editingInfo=null;
+  document.getElementById('writeArea').style.display='none';
+  document.getElementById('entryTA').value='';
+  fbSave(m,d,entries);showToast('Entry saved ✓');
+}
+
+/* ─── MOBILE ENTRY PANEL ─── */
+function openMobileEntry(m,d){
+  buildCalendar();buildSidebar();
+  var dateObj=new Date(2026,m,d);
+  var dayName=dateObj.toLocaleDateString('en-GB',{weekday:'long'});
+  var entries=getEntries(m,d);
+  var doneCount=entries.filter(function(e){return e.done;}).length;
+  document.getElementById('mepDate').textContent=d+' '+MONTHS[m];
+  document.getElementById('mepSub').textContent=dayName+' · '+entries.length+' entr'+(entries.length===1?'y':'ies')+(doneCount>0?' · '+doneCount+' done ✓':'');
+  renderMepContent(m,d);
+  document.getElementById('mobileEntry').classList.add('open');
+  document.getElementById('mepWriteArea').style.display='none';
+  document.getElementById('mepEntryTA').value='';
+}
+function renderMepContent(m,d){
+  var entries=getEntries(m,d);
+  var doneCount=entries.filter(function(e){return e.done;}).length;
+  document.getElementById('mepSub').textContent=new Date(2026,m,d).toLocaleDateString('en-GB',{weekday:'long'})+' · '+entries.length+' entr'+(entries.length===1?'y':'ies')+(doneCount>0?' · '+doneCount+' done ✓':'');
+  var cont=document.getElementById('mepContent');cont.innerHTML='';
+  renderEntryCards(cont,entries,m,d,true);
+}
+function closeMobileEntry(){
+  document.getElementById('mobileEntry').classList.remove('open');
+  mepEditingInfo=null;
+  document.getElementById('mepWriteArea').style.display='none';
+}
+function openMepWrite(){
+  mepEditingInfo=null;
+  document.getElementById('mepWriteArea').style.display='flex';
+  document.getElementById('mepWriteLabel').textContent='New entry';
+  document.getElementById('mepWriteLabel').className='wl';
+  document.getElementById('mepEntryTA').value='';
+  document.getElementById('mepEntryTA').focus();
+}
+function startMepEdit(m,d,idx,text){
+  mepEditingInfo={m:m,d:d,idx:idx,text:text};
+  document.getElementById('mepWriteArea').style.display='flex';
+  document.getElementById('mepWriteLabel').textContent='Editing entry';
+  document.getElementById('mepWriteLabel').className='wl ed';
+  document.getElementById('mepEntryTA').value=text;
+  document.getElementById('mepEntryTA').focus();
+}
+function cancelMepEdit(){
+  mepEditingInfo=null;
+  document.getElementById('mepWriteArea').style.display='none';
+  document.getElementById('mepEntryTA').value='';
+}
+function saveMepEntry(){
+  var text=document.getElementById('mepEntryTA').value.trim();
+  if(!text){document.getElementById('mepEntryTA').focus();return;}
+  if(!selectedDate)return;
+  var m=selectedDate.m,d=selectedDate.d;
+  var entries=getEntries(m,d).slice();
+  if(mepEditingInfo&&mepEditingInfo.m===m&&mepEditingInfo.d===d){
+    entries[mepEditingInfo.idx]=Object.assign({},entries[mepEditingInfo.idx],{text:text,ts:Date.now()});
+  }else{
+    entries.push({author:currentUser,text:text,ts:Date.now(),id:Date.now()+'_'+Math.random(),done:false,doneBy:null,doneAt:null});
+  }
+  mepEditingInfo=null;
+  document.getElementById('mepWriteArea').style.display='none';
+  document.getElementById('mepEntryTA').value='';
+  fbSave(m,d,entries);showToast('Entry saved ✓');
+}
+
+/* ─── MOBILE NAV ─── */
+function mobileTab(tab){
+  ['navCal','navMonths','navUser'].forEach(function(id){document.getElementById(id).classList.remove('active');});
+  if(tab==='cal'){document.getElementById('navCal').classList.add('active');}
+  else if(tab==='months'){document.getElementById('navMonths').classList.add('active');document.getElementById('mobileMonths').classList.add('open');}
+  else if(tab==='user'){document.getElementById('navUser').classList.add('active');document.getElementById('mobileUser').classList.add('open');}
+}
+function closeMobilePanel(id){
+  document.getElementById(id).classList.remove('open');
+  document.getElementById('navCal').classList.add('active');
+  ['navMonths','navUser'].forEach(function(n){document.getElementById(n).classList.remove('active');});
+}
+
+/* ─── FIREBASE WRITE ─── */
+function fbSave(m,d,entries){
+  setSyncing(true);
+  dbRef.child('entries').child(dk(m,d)).set(entries&&entries.length?entries:null).then(function(){setSyncing(false);}).catch(function(e){setSyncing(false);showToast('Sync error');});
+}
+function toggleDone(m,d,idx,done){
+  var entries=getEntries(m,d).slice();if(!entries[idx])return;
+  entries[idx]=Object.assign({},entries[idx],{done:done,doneBy:done?currentUser:null,doneAt:done?Date.now():null});
+  fbSave(m,d,entries);showToast(done?'✓ Marked as done!':'Marked as undone');
+}
+function deleteEntry(m,d,idx){
+  if(!confirm('Delete this entry?'))return;
+  var entries=getEntries(m,d).slice();entries.splice(idx,1);
+  fbSave(m,d,entries);showToast('Entry deleted');
+}
+
+function showToast(msg){
+  var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show');},2500);
+}
+</script>
+</body>
+</html>
